@@ -1,0 +1,18 @@
+when: step_validate_templates and network_isolation
+block:
+
+  - name: clone template validation tools
+    git:
+      repo=https://github.com/openstack/tripleo-heat-templates.git
+      dest={{ working_dir }}/tripleo-heat-templates
+
+  - name: validate the yaml files
+    shell: >
+      chdir={{ working_dir }}
+      python tripleo-heat-templates/tools/yaml-validate.py {{ item }}
+    register: validate_yaml_output
+    with_items:
+      - "{{ nic_configs_dir }}"
+      - "{{ network_environment_file }}"
+      - "{{ working_dir }}/*.yaml"
+    failed_when: validate_yaml_output.stdout.find('Validation failed on') != -1
